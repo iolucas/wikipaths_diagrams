@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.links line {
+    stroke: #999;
+    stroke-opacity: 0.6;
+}
+
+.nodes circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+</style>
+<svg id="svg-container" width="1200" height="1200"></svg>
+<script src="d3.v4.min.js"></script>
+<script src="force_diagram.js"></script>
+<script>
+    var diagram = new ForceDiagram("svg-container");
+
+    function getGraphDataFromEdges(rawEdges) {
+        
+        nodesDict = {};
+        edges = [];
+
+        for(var i = 0; i < rawEdges.length; i++) {
+            var source = rawEdges[i][0];
+            var target = rawEdges[i][1];
+
+            if(!(source in nodesDict))
+                nodesDict[source] = {id: source, group: 1}    
+
+            if(!(target in nodesDict))
+                nodesDict[target] = {id: target, group: 1}
+
+            edges.push({"source": source, "target": target, "value": 1})  ;
+        }
+
+        nodes = []
+        for(key in nodesDict)
+            nodes.push(nodesDict[key])
+
+        return {nodes: nodes, links: edges}
+    }
+
+    testEdges = [
+        [1,2],
+        [2,3],
+        [3,4],
+        [4,5],
+        [5,6],
+        [6,7],
+        [7,1]
+    ]
+
+    testGraphData = getGraphDataFromEdges(testEdges);
+
+    diagram.load(testGraphData);
+
+    // d3.json("miserables.json", function(error, graph) {
+    //     if (error) throw error;
+    //     diagram.load(graph);
+    // });
+
+</script>
