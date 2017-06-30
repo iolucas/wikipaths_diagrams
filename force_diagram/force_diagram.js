@@ -7,6 +7,8 @@ function ElasticSvgContainer() {
 
 function ForceDiagram(svgContainerId) {
 
+    baseRadius = 50;
+
     var svg = d3.select("#" + svgContainerId),
         width = +svg.attr("width"),
         height = +svg.attr("height");
@@ -19,7 +21,7 @@ function ForceDiagram(svgContainerId) {
         .force("link", d3.forceLink().id(function(d) { return d.id; }))
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide(50))
+        .force("collision", d3.forceCollide(baseRadius*1.5))
 
 
 
@@ -39,14 +41,19 @@ function ForceDiagram(svgContainerId) {
             .selectAll("circle")
             .data(graph.nodes)
             .enter()
-            .append("g")
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
+            .append("g");
+            // .call(d3.drag()
+            //     .on("start", dragstarted)
+            //     .on("drag", dragged)
+            //     .on("end", dragended));
 
         node.append("circle")
-            .attr("r", 30)
+            .attr("r", function(d) {
+                if(d.score != undefined)
+                    return baseRadius*d.score;
+
+                return baseRadius;
+            })
             .attr("fill", function(d) { 
                 return color(d.group); 
             })
