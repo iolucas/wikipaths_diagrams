@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+            }
+
+            body {   
+                word-wrap: break-word;
+                padding: 0px 0px 0px 0px;
+                background-color: #64ffda;
+            }   
+        </style>
+    </head>
+
+    <body>                
+        <!--<svg class="svg-container" width="100%" height="100%">
+            <rect id="node-container-mouse-area" width="100%" height="100%"></rect>
+            <g id="block-container" nvgtt-block-container>
+                <rect height="500" width="500" fill="blue"></rect>
+                <circle r="500" fill="blue"></circle>
+            </g>
+        </svg>-->
+        <!--<svg id="svg-container" width="1200" height="1200"></svg>-->
+        <!--<script src="jquery-2.1.4.min.js"></script>
+        <script src="eventhandler.js"></script>
+        <script src="d3.v4.min.js"></script>
+        <script src="force_diagram.js"></script>-->
+        <script src="jquery-2.1.4.min.js"></script>
+        <script src="d3.v4.min.js"></script>
+        <script src="eventhandler.js"></script>
+        <script src="nvgtt-container.js"></script>
+        <script>
+            // NvgttChart_Container.fitScreen();
+
+            var esvg = new ElasticSvg("svg-container", document.body);
+
+            d3.select("#svg-container")
+                .append("circle")
+                .attr("r", "500")
+                .attr("fill", "blue"); 
+
+            // esvg.on("dblclick", function(){
+            //     esvg.fitScreen();
+            // });
+
+            window.onresize = function() {
+                esvg.fitScreen();
+            }
+
+            
+
+            esvg.fitScreen();
+            // console.log(d3.zoomTransform(d3.select("#svg-container")));
+            // esvg.translate(500,0);
+            // esvg.scale(0.1);
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+        <link rel="stylesheet" href="assets/css/box-container.css"/>
+        <link rel="stylesheet" href="app/chart/style.css"/>
+
+        <!--    Begin Angular Modules -->
+
+
+
+        <title>Navigatte</title> 
+        <style>
+            html, body {
+                height: 100%;
+                color: rgba(0, 0, 0, 0.87);
+                background: white;
+                position: relative; 
+            }
+
+            body {
+                margin: 0;
+                padding: 0; 
+                /*padding-top: 70px;*/
+                word-wrap: break-word;  
+            }
+
+            .full-height {
+                height: 100%;
+            }
+
+            .fixed {
+                position: fixed;
+            }
+
+        </style>
+	</head>
+
+	<body>
+
+        <div id="nvgtt-content-area" class="full-height">
+
+            <div id="nvgtt-content-display" class="full-height" flex>
+                <svg class="svg-container" width="100%" height="100%">
+                    <rect id="node-container-mouse-area" width="100%" height="100%"></rect>
+                    <g id="block-container" nvgtt-block-container></g>
+                </svg>
+            </div>
+        </div>
+
+
+        <script src="assets/js/jquery-2.1.4.min.js"></script>
+        <script src="assets/js/d3.v3.min.js"></script>
+ 
+        
+        <script src="assets/js/eventhandler.js"></script>
+        <script src="assets/js/hexbin.js"></script>
+        <script src="assets/js/g-query.js"></script>
+        <script src="assets/js/grow-modal.js"></script>
+        <!--<script src="modules/content-show/controller.js"></script>-->
+
+        <script src="app/chart/nvgtt.js"></script>
+        <script src="app/chart/nvgtt-container.js"></script>
+        <script src="app/chart/nvgtt-blocks.js"></script>
+        <script src="app/chart/nvgtt-links.js"></script>
+        <script src="app/chart/nvgtt-select.js"></script>
+        <script src="app/chart/nvgtt-content.js"></script>
+        <script src="app/chart/nvgtt-project.js"></script>
+        
+
+
+        <script src="app/chart/nvgtt-create.js"></script>
+        <script src="app/chart/nvgtt-search.js"></script>
+        <script src="app/chart/nvgtt-changes.js"></script>
+        <script src="app/chart/nvgtt-changes-node.js"></script>
+        <script src="app/chart/nvgtt-create-modal.js"></script>
+
+        <script src="app/chart/nvgtt-create-links.js"></script>
+        <script src="app/chart/nvgtt-changes-link.js"></script>
+        <script src="app/chart/nvgtt-keyactions.js"></script>
+ 
+        <script>
+            'use strict';
+
+            var pageName = "lucas";
+
+            NvgttChart.load(pageName);
+
+
+            function getUrlVars()
+            {
+                var vars = [], hash;
+                var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+                for(var i = 0; i < hashes.length; i++)
+                {
+                    hash = hashes[i].split('=');
+                    vars.push(hash[0]);
+                    vars[hash[0]] = hash[1];
+                }
+                return vars;
+            }
+
+
+        </script>
+	</body>
+</html>

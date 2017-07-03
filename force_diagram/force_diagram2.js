@@ -48,31 +48,48 @@ function ForceDiagram(svgContainerId) {
         width = +svg.attr("width"),
         height = +svg.attr("height");
 
-    // svg.style("background-color", "#ddd");
 
-    var color = d3.scaleOrdinal(d3.schemeCategory20);
+    svg.style("background-color", "#ddd");
 
-    var simulation = d3.forceSimulation()
-        .force("link", d3.forceLink().id(function(d) { return d.id; }))
-        .force("charge", d3.forceManyBody())
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide(baseRadius*1.5))
+    // var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+    // var simulation = d3.forceSimulation()
+    //     .force("link", d3.forceLink().id(function(d) { return d.id; }))
+    //     .force("charge", d3.forceManyBody())
+    //     .force("center", d3.forceCenter(width / 2, height / 2))
+    //     .force("collision", d3.forceCollide(baseRadius*1.5))
 
     //Get svg mouse area and register its events
-	var svgMouseArea = d3.select("#node-container-mouse-area")
-		.on("mousedown", function() {
-			svgMouseArea.style("cursor", "move");		
-		})
-		.on("mouseup", function() {
-			svgMouseArea.style("cursor", "");		
-		})
-		.on("click", function() {
-			eventHandler.fire("click");
-		});
+	// var svgMouseArea = d3.select("#node-container-mouse-area")
+	// 	.on("mousedown", function() {
+	// 		svgMouseArea.style("cursor", "move");		
+	// 	})
+	// 	.on("mouseup", function() {
+	// 		svgMouseArea.style("cursor", "");		
+	// 	})
+	// 	.on("click", function() {
+	// 		eventHandler.fire("click");
+	// 	});
 
 
 
     this.load = function(graph) {
+
+        console.log(graph);
+
+        var force = d3.layout.force()
+            .size([width, height])
+            .nodes(graph.nodes)
+            .links(graph.links)
+            // .id(function(d) { return d.id; })
+            .linkStrength(0.1)
+            .friction(0.9)
+            .linkDistance(width/3.05)
+            .charge(-30)
+            .gravity(0.1)
+            .theta(0.8)
+            .alpha(0.1);
+            // .start();
 
         var link = svg.append("g")
             .attr("class", "links")
@@ -102,7 +119,7 @@ function ForceDiagram(svgContainerId) {
                 return baseRadius;
             })
             .attr("fill", function(d) { 
-                return color(d.group); 
+                return "blue"; 
             })
 
         node.append("text")
@@ -112,17 +129,23 @@ function ForceDiagram(svgContainerId) {
             });
             
 
-        //node.append("title")
-            //.text(function(d) { return d.id; });
 
-        simulation
-            .nodes(graph.nodes)
-            .on("tick", ticked);
 
-        simulation.force("link")
-            .links(graph.links);
 
-        function ticked() {
+        // simulation
+        //     .nodes(graph.nodes)
+        //     .on("tick", ticked);
+
+
+
+        // simulation.force("link")
+        //     .links(graph.links);
+
+        force.on("tick", refreshPositions);
+
+        force.start();
+
+        function refreshPositions() {
             link.attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
@@ -132,8 +155,8 @@ function ForceDiagram(svgContainerId) {
                 return "translate(" + d.x + " " + d.y + ")";
             }); 
 
-            //node.attr("cx", function(d) { return d.x; })
-                //.attr("cy", function(d) { return d.y; });
+            node.attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
         }
     }
 

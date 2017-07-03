@@ -1,0 +1,52 @@
+
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+body {   
+    /*position: fixed;
+    overflow-x: hidden;*/
+    word-wrap: break-word;
+    padding: 0px 0px 0px 0px;
+    /*background-color: rgb(147,157,166);
+
+    background: linear-gradient(135deg, #a0a0a0, #d0d0d0);
+    background: linear-gradient(135deg, rgb(147,157,166), rgb(226,230,236),rgb(165,173,177));*/
+
+    /*background: linear-gradient(90deg, rgb(18,27,36), rgb(43,60,68),rgb(20,53,68));*/
+
+}   
+
+
+
+.nvgtt-content-window {
+    /*padding-left: 300px;*/
+
+	background-color: #fff;
+	/*position: relative;*/
+	height: 100%;
+    text-align: left;
+}
+
+.nvgtt-content-notes {
+    outline: none;
+    resize: none;
+    width: 100%;
+    min-height: 400px;
+}
+
+.nvgtt-content-background-image {
+    background-image: url('assets/img/paper.jpg');
+    min-height: 200px;
+
+}
+
+.fixed {
+    position: fixed;
+}
+
+.sidebar-outer {
+    margin-top: 150px;
+    position: relative;
+}
