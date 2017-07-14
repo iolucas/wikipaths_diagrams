@@ -3,8 +3,8 @@ var EventHandler = function() {
 	var events = [];
 
 	this.on = function(event, callback) {
-		if(!$.isFunction(callback))
-			return;
+		// if(!$.isFunction(callback))
+		// 	return;
 
 		if(events[event] == undefined)
 			events[event] = [];

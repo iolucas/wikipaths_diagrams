@@ -17,27 +17,32 @@ var ElasticSvg = function(containerId, parentNode) {
 		.append("svg")
 		.attr("width", "100%")
 		.attr("height", "100%")
-		.style("display", "block");
+		.style("display", "block")
+		.style("position", "fixed")
+		.style("top", 0);
+
+	var contentGroup = svgNode.append("g")
+		.attr("id", containerId);
 
 	var mouseArea = svgNode.append("rect")
 		.attr("fill", "transparent")
 		.attr("width", "100%")
 		.attr("height", "100%")
-		.on("mousedown", function() {
-			d3.select(this).style("cursor", "move");		
-		})
-		.on("mouseup", function() {
-			d3.select(this).style("cursor", "");		
-		})
 		.on("click", function() {
 			eventHandler.fire("click");
 		})
 		.on("dblclick", function() {
 			eventHandler.fire("dblclick");
 		});
+		// .on("mousedown", function() {
+		// 		mouseArea.style("cursor", "move");
+		// })
+		// .on("mouseup", function() {
+		// 		d3.select(this).style("cursor", "");		
+		// })
 
-	var contentGroup = svgNode.append("g")
-		.attr("id", containerId);
+
+
 
 	//Properties of the container
 	this._scale = 1;
@@ -67,8 +72,22 @@ var ElasticSvg = function(containerId, parentNode) {
 			// 	.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 		});
 
+	//Must set mouse events down here becasue of a bug disabling dblclick zoom
+	// mouseArea.node().addEventListener("mousedown", function() {
+	// 	mouseArea.style("cursor", "move");
+	// });
+
+	// mouseArea.node().addEventListener("mouseup", function() {
+	// 	alert("oi");
+	// 	mouseArea.style("cursor", "");
+	// });
+
+
 	//Enable zoom/drag
-	mouseArea.call(containerZoom);
+	mouseArea.call(containerZoom)
+		.on("dblclick.zoom", null); //Disable dblclick zoom
+
+
 
 	//Public methods
 
@@ -118,9 +137,13 @@ var ElasticSvg = function(containerId, parentNode) {
         //Apply the scale to the chart
         self.scale(newScale);
 
+		var leftOffset = -containerBox.x * newScale + margin.left; //Left justify
+
+		//Add below to center in the screen
+		leftOffset += (window.innerWidth - margin.left - margin.right - containerBox.width*newScale) / 2;
+
         //Translate it to the better position
-        self.translate(-containerBox.x * newScale + margin.left,
-            -containerBox.y * newScale + margin.top);
+        self.translate(leftOffset, -containerBox.y * newScale + margin.top);
 	}
 }
 

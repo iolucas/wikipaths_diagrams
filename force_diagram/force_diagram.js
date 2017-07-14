@@ -1,40 +1,40 @@
-function createElasticSvgContainer(id, margins, parentNode) {
+// function createElasticSvgContainer(id, margins, parentNode) {
 
-    if(id == undefined)
-        id = "elastic-svg";
+//     if(id == undefined)
+//         id = "elastic-svg";
 
-    if(parentNode == undefined)
-        parentNode = document.body;
+//     if(parentNode == undefined)
+//         parentNode = document.body;
 
-    if(margins == undefined)
-        margins = {
-            top: '10',
-            left: '10',
-            bottom: '10',
-            right: '10'
-        }
+//     if(margins == undefined)
+//         margins = {
+//             top: '10',
+//             left: '10',
+//             bottom: '10',
+//             right: '10'
+//         }
 
-    var svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svgContainer.setAttribute("id", id);
+//     var svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+//     svgContainer.setAttribute("id", id);
 
-    svgContainer.customMargins = margins
+//     svgContainer.customMargins = margins
 
-    function updateSize() {
-        var newHeight = (window.innerHeight - svgContainer.customMargins.top - svgContainer.customMargins.bottom);
-        var newWidth = (window.innerWidth*1 - svgContainer.customMargins.left - svgContainer.customMargins.right);
+//     function updateSize() {
+//         var newHeight = (window.innerHeight - svgContainer.customMargins.top - svgContainer.customMargins.bottom);
+//         var newWidth = (window.innerWidth*1 - svgContainer.customMargins.left - svgContainer.customMargins.right);
 
-        svgContainer.setAttribute("width", newWidth);
-        svgContainer.setAttribute("height", newHeight);
-    }
+//         svgContainer.setAttribute("width", newWidth);
+//         svgContainer.setAttribute("height", newHeight);
+//     }
 
-    window.addEventListener("resize", updateSize);
+//     window.addEventListener("resize", updateSize);
 
-    updateSize();
+//     updateSize();
 
-    //Append to parent and return
-    parentNode.append(svgContainer);
-    return svgContainer
-}
+//     //Append to parent and return
+//     parentNode.append(svgContainer);
+//     return svgContainer
+// }
 
 
 // function zoomableCO
@@ -42,11 +42,23 @@ function createElasticSvgContainer(id, margins, parentNode) {
 
 function ForceDiagram(svgContainerId) {
 
+    var self = this;
+
+	//Create event handle to store events
+	var eventHandler = new EventHandler();
+	this.on = function(event, callback) {
+		eventHandler.on(event, callback);
+		return self;	
+	}
+
     baseRadius = 50;
 
-    var svg = d3.select("#" + svgContainerId),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+    var width = window.innerWidth;
+    var height = window.innerHeight
+
+    var svg = d3.select("#" + svgContainerId);
+        // width = +svg.attr("width"),
+        // height = +svg.attr("height");
 
     // svg.style("background-color", "#ddd");
 
@@ -58,19 +70,35 @@ function ForceDiagram(svgContainerId) {
         .force("center", d3.forceCenter(width / 2, height / 2))
         .force("collision", d3.forceCollide(baseRadius*1.5))
 
-    //Get svg mouse area and register its events
-	var svgMouseArea = d3.select("#node-container-mouse-area")
-		.on("mousedown", function() {
-			svgMouseArea.style("cursor", "move");		
-		})
-		.on("mouseup", function() {
-			svgMouseArea.style("cursor", "");		
-		})
-		.on("click", function() {
-			eventHandler.fire("click");
-		});
+    // //Get svg mouse area and register its events
+	// var svgMouseArea = d3.select("#node-container-mouse-area")
+	// 	.on("mousedown", function() {
+	// 		svgMouseArea.style("cursor", "move");		
+	// 	})
+	// 	.on("mouseup", function() {
+	// 		svgMouseArea.style("cursor", "");		
+	// 	})
+	// 	.on("click", function() {
+	// 		eventHandler.fire("click");
+	// 	});
 
 
+    var colorSchemes = [
+        ["#3c3c3c", "#f5f5f5", "#3c3c3c"],
+        ["#403d58", "#f2efea", "#403d58"],
+        ["#cfd2b2", "#e0d8de", "#4b3b47"],
+        ["#4b3b47", "#e0d8de", "#cfd2b2"],
+        ["#b3b5bb", "#cdfff9", "#817f75"],
+        ["#31493c", "#e8f1f2", "#b3efb2"],
+        ["#817f75", "#cdfff9", "#b3b5bb"]
+    ]
+
+    var currentColorScheme = colorSchemes[4]
+
+    d3.select(document.body)
+        .style('background-color', currentColorScheme[1])
+
+    d3.select("header").style('background-color', currentColorScheme[0])
 
     this.load = function(graph) {
 
@@ -102,11 +130,32 @@ function ForceDiagram(svgContainerId) {
                 return baseRadius;
             })
             .attr("fill", function(d) { 
-                return color(d.group); 
+                // return color(d.group); 
+                return currentColorScheme[2]
             })
+
+        // node.append("rect")
+        //     .attr("width", function(d) {
+        //         if(d.score != undefined)
+        //             return baseRadius*d.score;
+
+        //         return baseRadius;
+        //     })
+        //     .attr("height", function(d) {
+        //         if(d.score != undefined)
+        //             return baseRadius*d.score;
+
+        //         return baseRadius;
+        //     })
+        //     .attr("fill", function(d) { 
+        //         // return color(d.group); 
+        //         return currentColorScheme[2]
+        //     })
 
         node.append("text")
 			.attr("text-anchor", "middle")
+            // .attr("fill", currentColorScheme[0])
+            .attr("y", 4) 
             .text(function(d) {
                 return d.id; 
             });
@@ -117,7 +166,10 @@ function ForceDiagram(svgContainerId) {
 
         simulation
             .nodes(graph.nodes)
-            .on("tick", ticked);
+            .on("tick", ticked)
+            .on("end", function() {
+                eventHandler.fire("load.end");
+            });
 
         simulation.force("link")
             .links(graph.links);
