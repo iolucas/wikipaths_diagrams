@@ -1,3 +1,8 @@
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
 function BlockDiagram(svgContainerId) {
 
     var self = this;
@@ -18,13 +23,14 @@ function BlockDiagram(svgContainerId) {
         ["#4b3b47", "#e0d8de", "#cfd2b2"],
         ["#b3b5bb", "#cdfff9", "#817f75"],
         ["#31493c", "#e8f1f2", "#b3efb2"],
-        ["#817f75", "#cdfff9", "#b3b5bb"]
+        ["#817f75", "#cdfff9", "#b3b5bb"],
+        ["#1f271b", "#d3efbd", "#1f271b"],
     ]
 
     var currentColorScheme = colorSchemes[4]
 
-    d3.select(document.body)
-        .style('background-color', currentColorScheme[1])
+    // d3.select(document.body)
+    //     .style('background-color', currentColorScheme[1])
 
     d3.select("header").style('background-color', currentColorScheme[0])
 
@@ -129,25 +135,17 @@ function BlockDiagram(svgContainerId) {
             this.anchorPoints.push(newAnchor2);
             this.squares.push(square);
         }
-
-        this.getArea = function() {
-            var areaValue = 0;
-            for(var i in this.squares)
-                areaValue += this.squares[i].height;
-            return areaValue;            
-        }
     }
 
 
     this.load = function(graph) {
 
-        var circleGrid = new QuarterCircleGrid();
+        //Remove the first element that is the query itself
+        // graph.nodes = graph.nodes.slice(1);
 
         var sortedNodes = graph.nodes.sort(function(a, b) {
             return b.score - a.score;
         });
-
-        // console.log(sortedNodes);
 
         var lowerScore = sortedNodes[sortedNodes.length-1].score;
 
@@ -155,41 +153,122 @@ function BlockDiagram(svgContainerId) {
             var node = sortedNodes[i];
             node.width = parseInt(node.score/lowerScore);
             node.height = parseInt(node.score/lowerScore);
-
-            circleGrid.addSquare(node);
         }
 
-        console.log(circleGrid.getArea());
+        //Split the data into four groups, with maximizing size equality between them
 
-        // var blocks = [
-        //     30,10,5,3,2
-        // ]
+        function getMinIndex(array) {
+            var minIndex = 0;
+            for(var i = 1; i < array.length; i++)
+                if(array[minIndex] > array[i])
+                    minIndex = i;
+            return minIndex;
+        }
 
-        // for(var i in blocks) {
-        //     var blockSize = blocks[i];
-        //     var newSquare = new Square({
-        //         width: parseInt(blockSize),
-        //         height: parseInt(blockSize)
-        //     })
+        function flipCoordsVertically(sqrs) {
+            for(var i=0; i < sqrs.length; i++) {
+                var sqr = sqrs[i];
+                sqr.y = -sqr.y - sqr.height;
+            }
+        }
 
-        //     circleGrid.addSquare(newSquare);
-        // }
+        function flipCoordsHorizontally(sqrs) {
+            for(var i=0; i < sqrs.length; i++) {
+                var sqr = sqrs[i];
+                sqr.x = -sqr.x - sqr.width;
+            }
+        }
 
-       
+        var groupSizes = [0,0,0,0];
+        var groups = [[],[],[],[]];
 
+        //Ensure the first nodes to be positioned correctly
+        groups[1].push(sortedNodes[0]);
+        groupSizes[1] += Math.pow(sortedNodes[0].width, 2);
+        groups[3].push(sortedNodes[1]);
+        groupSizes[3] += Math.pow(sortedNodes[1].width, 2);
 
+        for(var i = 2; i < sortedNodes.length; i++) {
+            var node = sortedNodes[i];
+            var minInd = getMinIndex(groupSizes);
 
-        self.svg.selectAll("rect")
-            .data(circleGrid.squares)
+            groups[minInd].push(node);
+            groupSizes[minInd] += Math.pow(node.width, 2);
+        }
+
+        //For each group create a grid and fill it
+        //Then flip it according to its quadrant
+        for(var i = 0; i < groups.length; i++) {
+            var circleGrid = new QuarterCircleGrid();
+
+            var sqrs = groups[i];
+
+            for(var j = 0; j < sqrs.length; j++)
+                circleGrid.addSquare(sqrs[j]);
+
+            switch(i) {
+                case 0:
+                    flipCoordsVertically(sqrs);
+                    break;
+                case 1:
+                    flipCoordsVertically(sqrs);
+                    flipCoordsHorizontally(sqrs);
+                    break;
+                case 2:
+                    flipCoordsHorizontally(sqrs);
+                    break;
+            }
+        }
+
+        var blockMargin = 2;
+        var blockScale = 50;
+        var textMargin = 10;
+
+        var block = self.svg.selectAll(".square-blocks")
+            .data(sortedNodes)
             .enter()
-            .append("rect")
-            .attr("fill", currentColorScheme[2])
-            .attr("height", function(d){return d.height*10 - 2})
-            .attr("width",  function(d){return d.width*10 - 2})
-            .attr("x",  function(d){return d.x*10})
-            .attr("y",  function(d){return d.y*10})
+            .append("g")
+            .attr("transform", function(d) {
+                return "translate(" + d.x*blockScale + " " + d.y*blockScale + ")";
+            })
+            .attr("class", "square-blocks");
 
-        // console.log(graph)
+        block.append("rect")
+            .attr("fill", currentColorScheme[2])
+            .attr("height", function(d){
+                d.blockHeight = d.height*blockScale - blockMargin;
+                return d.blockHeight;
+            })
+            .attr("width",  function(d){
+                d.blockWidth = d.width*blockScale - blockMargin;
+                return d.blockWidth;
+            });
+
+        var textBlock = block.append("text")
+            .text(function(d) {
+                var blockTextValue = decodeURIComponent(d.id);
+                blockTextValue = blockTextValue.replaceAll("_", " ");
+                return blockTextValue; 
+            });
+            // .attr("font-size", 5); 
+            //Ratio between height/font-size for upper case include is =~ 1.3
+            // 1/1.3 =~ 0.75
+
+        //Get ggbox for each text to adjust its size
+        textBlock.each(function(d) {
+            var textBBox = this.getBBox();
+            d.fontSize = 0.75 * (textBBox.height/(textBBox.width + textMargin)) * (d.blockWidth)
+        });
+
+		textBlock.attr("text-anchor", "middle")
+            .attr("fill", "#d3efbd")
+            .attr("font-size", function(d){ return d.fontSize; })
+            .attr("x", function(d){
+                return d.blockWidth/2;
+            })
+            .attr("y", function(d){
+                return d.blockHeight/2;
+            });
 
     }
 }

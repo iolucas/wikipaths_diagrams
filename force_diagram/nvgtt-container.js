@@ -43,7 +43,6 @@ var ElasticSvg = function(containerId, parentNode) {
 
 
 
-
 	//Properties of the container
 	this._scale = 1;
 	this._position = { x:0, y:0 }
@@ -51,7 +50,7 @@ var ElasticSvg = function(containerId, parentNode) {
 	//Create object to handle nodes container zooming/draging
 	var containerZoom = d3.zoom()
 		//.scaleExtent([1, 1])
-		.scaleExtent([0.1, 5])
+		.scaleExtent([0.01, 100])
 		// .translateExtent([[0,1000],[0,1000]])
 		.on("zoom", function() {
 
@@ -131,8 +130,8 @@ var ElasticSvg = function(containerId, parentNode) {
 
         var newScale = xScale < yScale ? xScale : yScale;   //Get the lower scale
 
-        newScale = newScale > 1 ? 1 : newScale; //Ensure they are max of 1
-        newScale = newScale < 0.1 ? 0.1 : newScale; //ensure they are min of 0.1
+        // newScale = newScale > 1 ? 1 : newScale; //Ensure they are max of 1
+        // newScale = newScale < 0.1 ? 0.1 : newScale; //ensure they are min of 0.1
 
         //Apply the scale to the chart
         self.scale(newScale);

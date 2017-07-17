@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html>
+    <head>   
+        <meta charset="utf8">   
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">  
+        <title>canvasmaps</title>
+        <style>
+            body {
+                background-color: #ddd;
+            }
+
+
+        </style>
+    </head>
+
+    <body>
+
+        <div id="canvasDiv"></div>
+
+        <canvas id="myCanvas" width="1260" height="728" style="border:1px solid #000000;">
+        </canvas> 
+
+        <!-- <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script> -->
+        <script src="d3.v3.min.js"></script>
+        <script src="canvasmap.js"></script>
+        <script>
+
+            var linksScores = JSON.parse('{"Scale_(map)": 27.0, "Map_projection": 12.0, "Pixel": 11.0, "Temperature": 10.0, "Region": 8.0, "Cartography": 4.5, "Sphere": 4.0, "GIS": 4.0, "Europe": 4.0, "World_map": 4.0, "Space": 3.0, "Elevation": 3.0, "Middle_Ages": 3.0, "Terrain": 3.0, "Sign": 3.0, "Physical_body": 2.0, "Road_atlas": 2.0, "Nautical_chart": 2.0, "Contour_line": 2.0, "Rain": 2.0, "Hereford_Mappa_Mundi": 2.0, "Latin": 2.0, "T_and_O_map": 2.0, "Jerusalem": 2.0, "Arctic": 2.0, "Antarctica": 2.0, "Curvature": 2.0, "Plane_(geometry)": 2.0, "Surveying": 2.0, "Superimposition": 2.0, "Interpolation": 2.0, "Portable_Document_Format": 2.0, "Vector_graphics": 2.0, "Raster_graphics": 2.0, "Google_Maps": 2.0, "Topological": 2.0, "Atlas": 2.0, "Political_map": 2.0, "Terrain_cartography": 2.0, "Cartographer": 1.5, "Geographia": 1.5, "Geography": 1.5, "Amsterdam": 1.0, "CIA_World_Factbook": 1.0, "Context_(language_use)": 1.0, "Brain_mapping": 1.0, "DNA": 1.0, "Frederik_de_Wit": 1.0, "History_of_cartography": 1.0, "Municipality": 1.0, "United_Kingdom": 1.0, "Ordnance_Survey": 1.0, "Hereford_Cathedral": 1.0, "Compass_direction": 1.0, "Orient": 1.0, "Edo": 1.0, "Tokyo_Imperial_Palace": 1.0, "Ptolemy": 1.0, "Portolan_chart": 1.0, "Azimuthal_equidistant_projection": 1.0, "Reversed_map": 1.0, "Buckminster_Fuller": 1.0, "Dymaxion_map": 1.0, "Icosahedron": 1.0, "ArcMap": 1.0, "Ratio": 1.0, "Measurement": 1.0, "City_map": 1.0, "European_Union": 1.0, "Cartogram": 1.0, "Tube_map": 1.0, "London_Underground_map": 1.0, "River_Thames": 1.0, "National_Oceanic_and_Atmospheric_Administration": 1.0, "Border": 1.0, "Topographic_map": 1.0, "Geological_map": 1.0, "Fault_(geology)": 1.0, "Geoid": 1.0, "Mercator_projection": 1.0, "Aeronautical_chart": 1.0, "Lambert_conformal_conic_projection": 1.0, "Gnomonic_projection": 1.0, "Great_circle": 1.0, "World_War_II": 1.0, "Fortune_(magazine)": 1.0, "United_States_Geological_Survey": 1.0, "Digital_raster_graphic": 1.0, "Geographic_information_system": 1.0, "John_Snow_(physician)": 1.0, "Cholera": 1.0, "Global_navigation_satellite_system": 1.0, "Liquid_crystal_display": 1.0, "Cathode_ray_tube": 1.0, "Spline_(mathematics)": 1.0, "Webpage": 1.0, "MapQuest": 1.0, "Google_Earth": 1.0, "OpenStreetMap": 1.0, "Yahoo!_Maps": 1.0}');
+
+            var nodesScores = []
+            for(var node in linksScores) {
+                nodesScores.push({
+                    id: node, score:linksScores[node] 
+                })
+            }
+
+            var graph = {nodes:nodesScores}
+
+            var sortedNodes = graph.nodes.sort(function(a, b) {
+                return b.score - a.score;
+            });
+
+            var lowerScore = sortedNodes[sortedNodes.length-1].score;
+
+            for(var i in sortedNodes) {
+                var node = sortedNodes[i];
+                node.width = parseInt(node.score/lowerScore);
+                node.height = parseInt(node.score/lowerScore);
+            }
+
+            //Split the data into four groups, with maximizing size equality between them
+
+            function getMinIndex(array) {
+                var minIndex = 0;
+                for(var i = 1; i < array.length; i++)
+                    if(array[minIndex] > array[i])
+                        minIndex = i;
+                return minIndex;
+            }
+
+            function flipCoordsVertically(sqrs) {
+                for(var i=0; i < sqrs.length; i++) {
+                    var sqr = sqrs[i];
+                    sqr.y = -sqr.y - sqr.height;
+                }
+            }
+
+            function flipCoordsHorizontally(sqrs) {
+                for(var i=0; i < sqrs.length; i++) {
+                    var sqr = sqrs[i];
+                    sqr.x = -sqr.x - sqr.width;
+                }
+            }
+
+            var groupSizes = [0,0,0,0];
+            var groups = [[],[],[],[]];
+
+            //Ensure the first nodes to be positioned correctly
+            groups[1].push(sortedNodes[0]);
+            groupSizes[1] += Math.pow(sortedNodes[0].width, 2);
+            groups[3].push(sortedNodes[1]);
+            groupSizes[3] += Math.pow(sortedNodes[1].width, 2);
+
+            for(var i = 2; i < sortedNodes.length; i++) {
+                var node = sortedNodes[i];
+                var minInd = getMinIndex(groupSizes);
+
+                groups[minInd].push(node);
+                groupSizes[minInd] += Math.pow(node.width, 2);
+            }
+
+            //For each group create a grid and fill it
+            //Then flip it according to its quadrant
+            for(var i = 0; i < groups.length; i++) {
+                var circleGrid = new QuarterCircleGrid();
+
+                var sqrs = groups[i];
+
+                for(var j = 0; j < sqrs.length; j++)
+                    circleGrid.addSquare(sqrs[j]);
+
+                switch(i) {
+                    case 0:
+                        flipCoordsVertically(sqrs);
+                        break;
+                    case 1:
+                        flipCoordsVertically(sqrs);
+                        flipCoordsHorizontally(sqrs);
+                        break;
+                    case 2:
+                        flipCoordsHorizontally(sqrs);
+                        break;
+                }
+            }
+
+
+
+            function drawSquare(ctx, x, y, side, bgcolor, text, color) {
+                ctx.save(); //Save context settings
+                ctx.font = "30px Calibri";
+                var margin = 10;
+                var width = ctx.measureText(text).width + margin*2; //Get the square width with a margin
+                var height = width;
+                //Scale ctx to match the side size
+                var scaleValue = side / width;
+                ctx.scale(scaleValue, scaleValue);
+                ctx.fillStyle = bgcolor; 
+                ctx.fillRect(x/scaleValue, y/scaleValue, width, height);
+                ctx.fillStyle = color;
+                ctx.fillText(text, (x/scaleValue + margin), (y/scaleValue + 10 + height/2));
+                ctx.restore(); //Restore context settings
+            }
+
+            var width = 1260;
+            var height = 728;
+
+            var canvas = d3.select("#myCanvas")
+                .call(d3.behavior.zoom().scaleExtent([0.1, 100]).on("zoom", zoom))
+                .node().getContext("2d");
+
+            var ctx = canvas;
+
+            function zoom() {
+                // ctx.save();
+                // ctx.clearRect(0, 0, width, height);
+                // ctx.translate(d3.event.translate[0], d3.event.translate[1]);
+                // ctx.drawImage(d3.select("canvas").node(), 0, 0);
+                // ctx.restore();
+
+                // d3.select("canvas").attr("transform", "translate(" + d3.event.translate + ")");
+                // stage.style.transform = 'scale(' + scaleToFit + ')';
+                canvas.save();
+                canvas.clearRect(0, 0, width, height);
+                canvas.translate(d3.event.translate[0], d3.event.translate[1]);
+                canvas.scale(d3.event.scale, d3.event.scale);
+                draw(nodesScores);
+                canvas.restore();
+            }
+
+            var blockMargin = 2;
+            var blockScale = 50;
+            var textMargin = 10;
+
+
+            //Get the min/max coordinates
+            var minX = 0;
+            var minY = 0;
+            var maxX = 0;
+            var maxY = 0;
+            for(var i = 0; i < nodesScores.length; i++) {
+                var x = nodesScores[i].x;
+                var y = nodesScores[i].y;
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+
+            //Plot it into a new canvas
+            var renderCanvas = document.createElement('canvas');
+            renderCanvas.width = maxX - minX;
+            renderCanvas.height = maxY - minY;
+
+            for(var i = 0; i < nodesScores.length; i++) {
+                var x = nodesScores[i].x - minX;
+                var y = nodesScores[i].y - minY;
+                var side = nodesScores[i].width;
+                var text = nodesScores[i].id;
+                drawSquare(renderCanvas.getContext('2d'), x, y, side, '#817f75', text, '#d3efbd');
+            }   
+
+            function draw(nodesScores) {
+                ctx.save();
+                // ctx.clearRect(0, 0, width, height);
+                // ctx.translate(d3.event.translate[0], d3.event.translate[1]);
+                ctx.drawImage(renderCanvas, 0, 0);
+                ctx.restore();
+
+
+                // for(var i = 0; i < nodesScores.length; i++) {
+                //     var x = nodesScores[i].x - minX;
+                //     var y = nodesScores[i].y - minY;
+                //     var side = nodesScores[i].width;
+                //     var text = nodesScores[i].id;
+                //     drawSquare(renderCanvas.getContext('2d'), x, y, side, '#817f75', text, '#d3efbd');
+                // }   
+            }
+
+            draw(nodesScores);
+
+            // var c = document.getElementById("myCanvas");
+            // var ctx = c.getContext("2d");
+
+            
+            // drawSquare(ctx, 110, 5, 100, '#817f75', "Vieira", '#d3efbd');
+            // drawSquare(ctx, 215, 5, 100, '#817f75', "de", '#d3efbd');
+            // drawSquare(ctx, 320, 5, 100, '#817f75', "Oliveira", '#d3efbd');
+
+            // ctx.save()
+            // ctx.scale(10, 10)
+            // ctx.moveTo(0,0);
+            // ctx.lineTo(200,100);
+            // ctx.stroke(); 
+
+            // ctx.fillStyle = '#817f75';
+            // ctx.fillRect(10, 10, 100, 100);
+            // ctx.fillStyle = '#d3efbd';
+
+            // var c = document.getElementById("myCanvas");
+            // var ctx = c.getContext("2d");
+            // ctx.restore();
+            // ctx.font = "30px Arial";
+            // ctx.fillText("Hello World",10,50); 
+                            
+            
+
+        </script>
+
+    </body>
+
+
+</html>
